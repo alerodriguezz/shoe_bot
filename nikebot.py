@@ -17,7 +17,7 @@ from datetime import datetime
 from send_emails import *
 
 #load variables set in your .env file
-NIKE_URL= 'https://www.nike.com/launch/t/air-griffey-max-1-freshwater'
+NIKE_URL= 'https://www.nike.com/launch/t/air-huarache-st%C3%BCssy-desert-oak'
 NIKE_TEST_URL='https://www.nike.com/launch/t/air-force-1-07-craft-mantra-orange'
 
 
