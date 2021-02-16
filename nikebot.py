@@ -176,8 +176,7 @@ class nike_bot:
     def closeBrowser(self):
         """Closes browser"""
         self.driver.close()
-
-# Testing purposes 
+        
 if __name__ == '__main__':
     load_dotenv()
     notification= email_client("Alex",str(os.getenv('SENDER_EMAIL')),str(os.getenv('EMAIL_PASSWORD')))
