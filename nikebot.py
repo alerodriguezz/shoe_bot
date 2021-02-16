@@ -35,7 +35,7 @@ class nike_bot:
         profile.set_preference("dom.webdriver.enabled", False)
         profile.set_preference('useAutomationExtension', False)
         profile.update_preferences() 
-        self.driver = webdriver.Firefox(firefox_profile=profile,options=opts)
+        self.driver = webdriver.Firefox(firefox_profile=profile,options=opts,executable_path=os.getcwd()+"/geckodriver")
         self.password=new_password
     #Sign into site with product
     def signIn(self):
@@ -61,7 +61,6 @@ class nike_bot:
     #find product
     def findProduct(self):
         try:
-
             driver = self.driver
             driver.get(NIKE_URL)
             driver.set_window_position(0, 0)
@@ -181,7 +180,7 @@ if __name__ == '__main__':
     load_dotenv()
     notification= email_client("Alex",str(os.getenv('SENDER_EMAIL')),str(os.getenv('EMAIL_PASSWORD')))
     new_user = nike_bot(str(os.getenv('NIKE_EMAIL')),str(os.getenv('NIKE_PASSWORD')))
-    new_user.findProduct()
+    #new_user.findProduct()
     if new_user.findProduct() == 1:
         notification.send_email("Nike shoe order placed, check your email")
     else:
