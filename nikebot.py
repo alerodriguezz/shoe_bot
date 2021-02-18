@@ -17,7 +17,7 @@ from datetime import datetime
 from send_emails import *
 
 #load variables set in your .env file
-NIKE_URL= 'https://www.nike.com/launch/t/air-huarache-st%C3%BCssy-desert-oak'
+NIKE_URL= 'https://www.nike.com/launch/t/womens-air-jordan-1-silver-toe'
 NIKE_TEST_URL='https://www.nike.com/launch/t/air-force-1-07-craft-mantra-orange'
 
 
@@ -36,6 +36,7 @@ class nike_bot:
         profile.set_preference('useAutomationExtension', False)
         profile.update_preferences() 
         self.driver = webdriver.Firefox(firefox_profile=profile,options=opts,executable_path=os.getcwd()+"/geckodriver")
+        self.username=new_username
         self.password=new_password
     #Sign into site with product
     def signIn(self):
@@ -62,7 +63,7 @@ class nike_bot:
     def findProduct(self):
         try:
             driver = self.driver
-            driver.get(NIKE_URL)
+            driver.get(NIKE_TEST_URL)
             driver.set_window_position(0, 0)
             driver.set_window_size(1024, 1920)
             
@@ -88,8 +89,8 @@ class nike_bot:
                 print (available_list)
                 size=available_list[random.randint(0,len(available_list)-1)]
 
-                desired_size= "M 10.5 / W 12"
-                desired_size2="M 11 / W 12.5"
+                desired_size= "W 8.5 / M 7"
+                desired_size2="W 9 / M 7.5"
                 if desired_size in available_list: 
                     size = desired_size 
                 elif desired_size2 in available_list:
@@ -106,6 +107,7 @@ class nike_bot:
                 print("Adding to cart...")
                 WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//button[contains(text(), 'Add to Cart') or contains(text(),'Buy')]"))).click()
                 time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
+                self.pop_up_handler()
                 print ("Clicked add to cart")
                 print ("Checking out...")
                 try:
@@ -160,18 +162,26 @@ class nike_bot:
         """Checks if product is available"""
         webdriver = self.driver
         try:
-            WebDriverWait(webdriver,20).until(EC.visibility_of_element_located((By.XPATH,"//button[contains(text(), 'Add to Cart') or contains(text(),'Notify Me') or contains(text(),'Buy')]")))
-            btn = webdriver.find_element_by_xpath("//button[@class='ncss-btn-primary-dark btn-lg']")
+            WebDriverWait(webdriver,20).until(EC.visibility_of_element_located((By.XPATH,"//*[@class='buttoncount-1'] | //button[contains(text(), 'Add to Cart')]")))
+            btn = webdriver.find_element_by_xpath("//*[@class='buttoncount-1'] | //button[contains(text(), 'Add to Cart')]")
             if btn.text == "Add to Cart" or "Buy" in btn.text:
                 return True
             else:
+                print(btn.text)
                 return False
         except Exception as e :
-            print ("Error...", str(e))
+            print ("Error...", str(e) )
             now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
             webdriver.get_screenshot_as_file('error_screenshot-%s.png' % now)
             return False
         return True
+    def pop_up_handler(self):
+        webdriver= self.driver
+        #check for alert
+        try:
+            close= webdriver.find_element_by_xpath("//button[@value='+close+'] | //button[@value='+Close+']").click()
+        except:
+            pass
     def closeBrowser(self):
         """Closes browser"""
         self.driver.close()
@@ -180,7 +190,6 @@ if __name__ == '__main__':
     load_dotenv()
     notification= email_client("Alex",str(os.getenv('SENDER_EMAIL')),str(os.getenv('EMAIL_PASSWORD')))
     new_user = nike_bot(str(os.getenv('NIKE_EMAIL')),str(os.getenv('NIKE_PASSWORD')))
-    #new_user.findProduct()
     if new_user.findProduct() == 1:
         notification.send_email("Nike shoe order placed, check your email")
     else:
