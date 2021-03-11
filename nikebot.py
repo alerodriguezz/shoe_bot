@@ -17,7 +17,7 @@ from datetime import datetime
 from send_emails import *
 
 #load variables set in your .env file
-NIKE_URL= 'https://www.nike.com/launch/t/overbreak-undercover-overcast'
+NIKE_URL= 'https://www.nike.com/launch/t/jordan-ma2-future-beginnings'
 NIKE_TEST_URL='https://www.nike.com/launch/t/air-force-1-07-craft-mantra-orange'
 
 
@@ -60,10 +60,8 @@ class nike_bot:
     
     def findProduct(self):
         try:
-            print("Connecting...")
             driver = self.driver
-            driver.get(NIKE_URL)
-            print("Success")
+            driver.get(NIKE_TEST_URL)
             driver.set_window_position(0, 0)
             driver.set_window_size(1024, 1920)
             
@@ -145,43 +143,45 @@ class nike_bot:
                     cvv.send_keys(str(os.getenv('CVV')))
                     time.sleep(1)
                     temp= driver.find_element_by_xpath("//button[contains(text(), 'Save')]").click()
-
-
+                    time.sleep(1)
+                    order= driver.find_element_by_id().click()
+                    WebDriverWait(driver,15).until(EC.element_to_be_clickable((By.XPATH,"//button[contains(text(), 'Order') or contains(text(),'order')]"))).click()
                 except:
                     pass
-
-                #Wait for page to load and enter cvv
-                print("Placing order...")
-                time.sleep(random.randint(int((WAIT_TIME+3)/2),WAIT_TIME+3))
-                WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH,'//iframe[@title="Credit Card CVV Form"]')))
-                iframe = driver.find_element_by_xpath('//iframe[@title="Credit Card CVV Form"]')
-                driver.switch_to.frame(iframe)
-                time.sleep(1)
-                cvv = driver.find_element_by_id('cvNumber')
-                cvv.clear()
-                cvv.send_keys(str(os.getenv('CVV')))
-                print("Entered CVV...")
-                #clicking continue to order review
-                print("Continuing to order review...")
-                time.sleep(1)
-                driver.switch_to.default_content()
-                print("switching to default content frame...")
-                time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
-                """button = driver.find_element_by_xpath("//button[contains(text(), 'Continue To Order Rev')][@data-attr='continueToOrderReviewBtn']")
-                button.click()"""
-                WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//button[contains(text(), 'Continue To Order Rev')][@data-attr='continueToOrderReviewBtn']"))).click()
-                print("clicked Continue to Order Review...")
-                dateTimeObj = datetime.now()
-                time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
-                WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//button[contains(text(), 'Place Order')]"))).click()
-                print("clicked Place Order")
-                #button = driver.find_element_by_xpath("//button[contains(text(), 'Place Order')]")
-                #print(button.text)
+                try:
+                    #Wait for page to load and enter cvv
+                    print("Placing order...")
+                    time.sleep(random.randint(int((WAIT_TIME+3)/2),WAIT_TIME+3))
+                    WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH,'//iframe[@title="Credit Card CVV Form"]')))
+                    iframe = driver.find_element_by_xpath('//iframe[@title="Credit Card CVV Form"]')
+                    driver.switch_to.frame(iframe)
+                    time.sleep(1)
+                    cvv = driver.find_element_by_id('cvNumber')
+                    cvv.clear()
+                    cvv.send_keys(str(os.getenv('CVV')))
+                    print("Entered CVV...")
+                    #clicking continue to order review
+                    print("Continuing to order review...")
+                    time.sleep(1)
+                    driver.switch_to.default_content()
+                    print("switching to default content frame...")
+                    time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
+                    """button = driver.find_element_by_xpath("//button[contains(text(), 'Continue To Order Rev')][@data-attr='continueToOrderReviewBtn']")
+                    button.click()"""
+                    WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//button[contains(text(), 'Continue To Order Rev')][@data-attr='continueToOrderReviewBtn']"))).click()
+                    print("clicked Continue to Order Review...")
+                    dateTimeObj = datetime.now()
+                    time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
+                    #WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//button[contains(text(), 'Place Order')]"))).click()
+                    print("clicked Place Order")
+                    #button = driver.find_element_by_xpath("//button[contains(text(), 'Place Order')]")
+                    #print(button.text)
+                except:
+                    pass
                 print("Order placed on ", dateTimeObj)
                 time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
                 self.closeBrowser()
                 return True 
-
         except Exception as e:
             print ("Error...", str(e))
             now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -208,7 +208,7 @@ class nike_bot:
     def closeBrowser(self):
         """Closes browser"""
         self.driver.close()
-
+"""
 if __name__ == '__main__':
     load_dotenv()
     notification= email_client("Alex",str(os.getenv('SENDER_EMAIL')),str(os.getenv('EMAIL_PASSWORD')))
@@ -217,5 +217,5 @@ if __name__ == '__main__':
         notification.send_email("Nike shoe order placed, check your email")
   
 
-
+"""
 

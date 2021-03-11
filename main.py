@@ -4,13 +4,14 @@
 from nikebot import *
 from dotenv import load_dotenv
 
-load_dotenv()
-notification= email_client("Alex",str(os.getenv('SENDER_EMAIL')),str(os.getenv('EMAIL_PASSWORD')))
-new_user = nike_bot(str(os.getenv('NIKE_EMAIL')),str(os.getenv('NIKE_PASSWORD')))
+
 
 amt=2
 counter=0
 while counter<amt:
+    load_dotenv()
+    notification= email_client("Alex",str(os.getenv('SENDER_EMAIL')),str(os.getenv('EMAIL_PASSWORD')))
+    new_user = nike_bot(str(os.getenv('NIKE_EMAIL')),str(os.getenv('NIKE_PASSWORD')))
     try:
         if new_user.findProduct() == 1:
             notification.send_email("Nike shoe order placed, check your email")
