@@ -17,7 +17,7 @@ from datetime import datetime
 from send_emails import *
 
 #load variables set in your .env file
-NIKE_URL= 'https://www.nike.com/launch/t/womens-air-jordan-1-silver-toe'
+NIKE_URL= 'https://www.nike.com/launch/t/overbreak-undercover-overcast'
 NIKE_TEST_URL='https://www.nike.com/launch/t/air-force-1-07-craft-mantra-orange'
 
 
@@ -30,19 +30,18 @@ class nike_bot:
         opts=Options()
         opts.add_argument("--headless")
         profile.set_preference("network.proxy.type", 1)
-        profile.set_preference("network.proxy.http", "51.178.220.22:80")
-        profile.set_preference("network.proxy.http_port", 80)
+        profile.set_preference("network.proxy.http", "198.50.163.192")
+        profile.set_preference("network.proxy.http_port", 3129)
         profile.set_preference("dom.webdriver.enabled", False)
         profile.set_preference('useAutomationExtension', False)
         profile.update_preferences() 
-        self.driver = webdriver.Firefox(firefox_profile=profile,options=opts,executable_path=os.getcwd()+"/geckodriver")
+        self.driver = webdriver.Firefox(firefox_profile=profile,executable_path=os.getcwd()+"/geckodriver")
         self.username=new_username
         self.password=new_password
     #Sign into site with product
     def signIn(self):
         """ Sign into site with product"""
         driver = self.driver       #Navigate to URL
-
         #enter username
         time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
         username_elem = driver.find_element_by_xpath('//*[@name="emailAddress"]')
@@ -56,19 +55,22 @@ class nike_bot:
         password_elem = driver.find_element_by_xpath('//*[@name="password"]')
         password_elem.clear()
         password_elem.send_keys(self.password)
-
         time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
         password_elem.send_keys(Keys.RETURN)
-    #find product
+    
     def findProduct(self):
         try:
+            print("Connecting...")
             driver = self.driver
-            driver.get(NIKE_TEST_URL)
+            driver.get(NIKE_URL)
+            print("Success")
             driver.set_window_position(0, 0)
             driver.set_window_size(1024, 1920)
             
             time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
+
            
+            
             #check availability
             dateTimeObj = datetime.now(pytz.timezone('US/Pacific'))
             if self.isProductAvailable() == 0:
@@ -77,6 +79,8 @@ class nike_bot:
                 return False
             else:
                 print("Item is available....")
+        
+
                 #collect available shoe sizes 
                 available_list = []
                 sizes = driver.find_elements_by_xpath('//*[@data-qa="size-available"]')
@@ -89,15 +93,14 @@ class nike_bot:
                 print (available_list)
                 size=available_list[random.randint(0,len(available_list)-1)]
 
-                desired_size= "W 8.5 / M 7"
-                desired_size2="W 9 / M 7.5"
+                desired_size= "M 10.5 / W 12"
+                desired_size2="M 11 / W 12.5"
                 if desired_size in available_list: 
                     size = desired_size 
                 elif desired_size2 in available_list:
                     size=desired_size2
                 else:
                     print(desired_size," not available, choosing random")
-
 
                 #click size 
 
@@ -107,8 +110,15 @@ class nike_bot:
                 print("Adding to cart...")
                 WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//button[contains(text(), 'Add to Cart') or contains(text(),'Buy')]"))).click()
                 time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
-                self.pop_up_handler()
                 print ("Clicked add to cart")
+
+                #In case of sign-in pop-up
+                try:
+                    self.signIn()
+                    print("....Signed In Succesfully")
+                except:
+                    pass
+                #proceed to checkout 
                 print ("Checking out...")
                 try:
                     WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//button[contains(text(), 'Checkout')]"))).click()
@@ -117,16 +127,32 @@ class nike_bot:
                     WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,'//a[@href="https://www.nike.com/us/en/cart"]'))).click()
                     time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
                     WebDriverWait(driver,15).until(EC.element_to_be_clickable((By.XPATH,"//button[contains(text(), 'Checkout')]"))).click()
-                    
-                #Sign In
-                print("Signing in...")
-                self.signIn()
-                print("....Signed In Succesfully")
 
-            
+                #In case of sign-in pop-up
+                try:
+                    self.signIn()
+                    print("....Signed In Succesfully")
+                    time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
+                except:
+                    pass
+
+                #in case of cart pop-up
+                try:
+                    iframe = driver.find_element_by_xpath('//iframe[@title="creditCardIframeForm"]')
+                    driver.switch_to.frame(iframe)
+                    cvv = driver.find_element_by_id('cvNumber')
+                    cvv.clear()
+                    cvv.send_keys(str(os.getenv('CVV')))
+                    time.sleep(1)
+                    temp= driver.find_element_by_xpath("//button[contains(text(), 'Save')]").click()
+
+
+                except:
+                    pass
+
                 #Wait for page to load and enter cvv
                 print("Placing order...")
-                time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
+                time.sleep(random.randint(int((WAIT_TIME+3)/2),WAIT_TIME+3))
                 WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH,'//iframe[@title="Credit Card CVV Form"]')))
                 iframe = driver.find_element_by_xpath('//iframe[@title="Credit Card CVV Form"]')
                 driver.switch_to.frame(iframe)
@@ -137,14 +163,18 @@ class nike_bot:
                 print("Entered CVV...")
                 #clicking continue to order review
                 print("Continuing to order review...")
+                time.sleep(1)
                 driver.switch_to.default_content()
+                print("switching to default content frame...")
                 time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
                 """button = driver.find_element_by_xpath("//button[contains(text(), 'Continue To Order Rev')][@data-attr='continueToOrderReviewBtn']")
                 button.click()"""
                 WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//button[contains(text(), 'Continue To Order Rev')][@data-attr='continueToOrderReviewBtn']"))).click()
+                print("clicked Continue to Order Review...")
                 dateTimeObj = datetime.now()
                 time.sleep(random.randint(int(WAIT_TIME/2),WAIT_TIME))
                 WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.XPATH,"//button[contains(text(), 'Place Order')]"))).click()
+                print("clicked Place Order")
                 #button = driver.find_element_by_xpath("//button[contains(text(), 'Place Order')]")
                 #print(button.text)
                 print("Order placed on ", dateTimeObj)
@@ -155,7 +185,7 @@ class nike_bot:
         except Exception as e:
             print ("Error...", str(e))
             now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            driver.get_screenshot_as_file('error_screenshot-%s.png' % now)
+            driver.get_screenshot_as_file('image_error_log/error_screenshot-%s.png' % now)
             self.closeBrowser()
             return False
     def isProductAvailable(self):
@@ -172,29 +202,20 @@ class nike_bot:
         except Exception as e :
             print ("Error...", str(e) )
             now = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            webdriver.get_screenshot_as_file('error_screenshot-%s.png' % now)
+            webdriver.get_screenshot_as_file('image_error_log/error_screenshot-%s.png' % now)
             return False
         return True
-    def pop_up_handler(self):
-        webdriver= self.driver
-        #check for alert
-        try:
-            close= webdriver.find_element_by_xpath("//button[@value='+close+'] | //button[@value='+Close+']").click()
-        except:
-            pass
     def closeBrowser(self):
         """Closes browser"""
         self.driver.close()
-        
+
 if __name__ == '__main__':
     load_dotenv()
     notification= email_client("Alex",str(os.getenv('SENDER_EMAIL')),str(os.getenv('EMAIL_PASSWORD')))
     new_user = nike_bot(str(os.getenv('NIKE_EMAIL')),str(os.getenv('NIKE_PASSWORD')))
     if new_user.findProduct() == 1:
         notification.send_email("Nike shoe order placed, check your email")
-    else:
-        notification.send_email("Shoe order NOT placed, check logs")
-    
+  
 
 
 
